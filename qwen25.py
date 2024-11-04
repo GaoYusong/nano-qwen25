@@ -7,6 +7,7 @@ from safetensors import safe_open
 from torch import nn
 
 from tokenizer import Tokenizer
+import utils
 
 @dataclass
 class ModelArgs:
@@ -26,12 +27,7 @@ class Transformer(nn.Module):
 class Qwen:
     @staticmethod
     def build(model_path: str) -> "Qwen":
-        # Read the code from refs/main to find the snapshot
-        with open(Path(model_path) / "refs" / "main", "r") as f:
-            snapshot_code = f.read().strip()
-        
-        # Construct full snapshot path
-        snapshot_path = Path(model_path) / "snapshots" / snapshot_code
+        snapshot_path = utils.newest_snapshot(model_path)
         
         # Load the checkpoint
         checkpoint = {}
@@ -45,7 +41,7 @@ class Qwen:
         model_args = ModelArgs(**params)
         
         # Load the tokenizer
-        tokenizer = Tokenizer(131072)
+        tokenizer = Tokenizer(model_path)
         
         # Initialize the model
         model = Transformer(model_args)
@@ -58,7 +54,7 @@ class Qwen:
         self.tokenizer = tokenizer
 
 def main(
-    model_path: str = os.path.expanduser("~/.cache/huggingface/hub/models--Qwen--Qwen2.5-0.5B-Instruct"),
+    model_path: str = utils.MODEL_PATH,
 ):
     qwen = Qwen.build(
         model_path=model_path
